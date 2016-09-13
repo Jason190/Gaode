@@ -10,9 +10,11 @@ import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps2d.AMap;
+import com.amap.api.maps2d.CameraUpdateFactory;
 import com.amap.api.maps2d.LocationSource;
 import com.amap.api.maps2d.MapView;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
+import com.amap.api.maps2d.model.CameraPosition;
 import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.MyLocationStyle;
 import com.amap.api.maps2d.model.PolylineOptions;
@@ -47,9 +49,9 @@ public class Main2Activity extends Activity  implements LocationSource,
         // 自定义系统定位小蓝点
         MyLocationStyle myLocationStyle = new MyLocationStyle();
         myLocationStyle.myLocationIcon(BitmapDescriptorFactory
-                .fromResource(R.drawable.location_marker));// 设置小蓝点的图标
-        myLocationStyle.strokeColor(Color.BLACK);// 设置圆形的边框颜色
-        myLocationStyle.radiusFillColor(Color.argb(100, 0, 0, 180));// 设置圆形的填充颜色
+                .fromResource(R.drawable.point));// 设置小蓝点的图标
+        myLocationStyle.strokeColor(Color.DKGRAY);// 设置圆形的边框颜色
+        myLocationStyle.radiusFillColor(Color.argb(100, 207, 226, 243));// 设置圆形的填充颜色
         // myLocationStyle.anchor(int,int)//设置小蓝点的锚点
         myLocationStyle.strokeWidth(1.0f);// 设置圆形的边框粗细
         amap.setMyLocationStyle(myLocationStyle);
@@ -66,10 +68,10 @@ public class Main2Activity extends Activity  implements LocationSource,
 
                 if (lastLocation==null){
                     lastLocation=new LatLng(aMapLocation.getLatitude(),aMapLocation.getLongitude());
-
+                    amap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition(lastLocation,18f,0f,0f)));
                 }
                 if (lastLocation.latitude!=aMapLocation.getLatitude()||lastLocation.longitude!=aMapLocation.getLongitude()){
-                    amap.addPolyline(new PolylineOptions().add(lastLocation,new LatLng(aMapLocation.getLatitude(),aMapLocation.getLongitude())).width(5).color(Color.BLUE));
+                    amap.addPolyline(new PolylineOptions().add(lastLocation,new LatLng(aMapLocation.getLatitude(),aMapLocation.getLongitude())).width(15).color(Color.CYAN));
                 }
                 lastLocation=new LatLng(aMapLocation.getLatitude(),aMapLocation.getLongitude());
 
