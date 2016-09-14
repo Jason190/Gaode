@@ -12,5 +12,5 @@ latGPS      double<br/>
 lonGPS      double<br/>
 latAmap     double<br/>
 lonAmap     double<br/>
-data        data<br/>
+date        date<br/>
 time        time<br/>
