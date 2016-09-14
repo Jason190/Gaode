@@ -12,5 +12,5 @@ latGPS      double<br/>
 lonGPS      double<br/>
 latAmap     double<br/>
 lonAmap     double<br/>
-date        date<br/>
-time        time<br/>
+date        varchar<br/>
+time        varchar<br/>
