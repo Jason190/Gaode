@@ -1,9 +1,13 @@
 package com.example.jason.gaode;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -19,6 +23,10 @@ import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.MyLocationStyle;
 import com.amap.api.maps2d.model.PolylineOptions;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class Main2Activity extends Activity  implements LocationSource,
         AMapLocationListener {
     private MapView mapView=null;
@@ -27,6 +35,10 @@ public class Main2Activity extends Activity  implements LocationSource,
     private AMapLocationClient mlocationClient;
     private AMapLocationClientOption mLocationOption;
     private LatLng lastLocation=null;
+    private SQLiteDatabase db=null;
+    private SimpleDateFormat sDateFormat    =   new    SimpleDateFormat("yyyy-MM-dd    hh:mm:ss");
+    private int topSpeed=100;//km/h
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +48,25 @@ public class Main2Activity extends Activity  implements LocationSource,
         mapView.onCreate(savedInstanceState);
 
         init();
+        initDB();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        db.close();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+//        db.close();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initDB();
     }
 
     private void init() {
@@ -76,17 +107,22 @@ public class Main2Activity extends Activity  implements LocationSource,
                 if (lastLocation.latitude!=aMapLocation.getLatitude()||lastLocation.longitude!=aMapLocation.getLongitude()){
                     double distance=coorNageCalcDistance(lastLocation,new LatLng(aMapLocation.getLatitude(),aMapLocation.getLongitude()));
                     double duringTime=aMapLocation.getTime()-lasttime;
-                    int speed=(int) (distance/(duringTime/1000)/1000*3600);
-                    int speedColor=100/speed*255;
-                    if (speed==0){
-                        speedColor=0;
-                    }
-                    else if (speed>100)
+                    double speed=(distance/(duringTime/1000)/1000*3600);
+                    double ss=speed/topSpeed*255;
+                    int speedColor=(int)ss;
+                    if (speed>topSpeed)
                     {
                         speedColor=255;
                     }
 
                     amap.addPolyline(new PolylineOptions().add(lastLocation,new LatLng(aMapLocation.getLatitude(),aMapLocation.getLongitude())).width(15).color(Color.rgb(255-speedColor,speedColor,0)));
+                    ContentValues cv=new ContentValues();
+                    editPositionList(cv,null,123,"jason",Double.NaN,Double.NaN,aMapLocation.getLatitude(),aMapLocation.getLongitude(),sDateFormat.format(new Date()),null );
+                    TextView tv=(TextView)findViewById(R.id.texter);
+                    tv.setText(String.format("%3.2f",speed) +",颜色"+speedColor+",type"+aMapLocation.getLocationType()+",卫星"+aMapLocation.getSatellites()+",精度"+aMapLocation.getAccuracy()+",速度"+aMapLocation.getSpeed()+",地址"+aMapLocation.getAddress()+",街道"+aMapLocation.getStreet());
+                    try{
+                    db.insert("test1",null,cv);}
+                    catch (Exception e){}
                 }
                 lastLocation=new LatLng(aMapLocation.getLatitude(),aMapLocation.getLongitude());
                 lasttime= aMapLocation.getTime();
@@ -177,7 +213,6 @@ public class Main2Activity extends Activity  implements LocationSource,
         //X = xval;
         //Y = yval;
     }
-
     //单位是度
     public double coorNageCalcDistance(LatLng point1,LatLng point2){
         dian pointA=gaussProjCal(point1.longitude,point1.latitude);
@@ -185,7 +220,6 @@ public class Main2Activity extends Activity  implements LocationSource,
 
         return zuoBiaoFanSuan(pointA,pointB);
     }
-
     //直角坐标系下计算
     private double zuoBiaoFanSuan(dian point1,dian point2){
         double dx=point1.getX()-point2.getX();
@@ -195,4 +229,26 @@ public class Main2Activity extends Activity  implements LocationSource,
         double distance=Math.sqrt(ddx+ddy);
         return distance;
     }
+    private void initDB(){
+        String path= Environment.getExternalStorageDirectory().getPath();
+
+//        db=SQLiteDatabase.openOrCreateDatabase(path+ File.separator+"database.db",null);
+        DBhelper dBhelper=new DBhelper(this,path+File.separator+"database.db",null,1);
+        db= dBhelper.getWritableDatabase();
+    }
+
+    private ContentValues editPositionList(ContentValues cv, Integer id, int holderid, String holderName, double latGPS, double lonGPS, double latAmap, double
+                                           lonAmap, String date, String time){
+        cv.put("ID",id);
+        cv.put("holderID",holderid);
+        cv.put("holderName",holderName);
+        cv.put("latGPS",latGPS);
+        cv.put("lonGPS",lonGPS);
+        cv.put("latAmap",latAmap);
+        cv.put("lonAmap",lonAmap);
+        cv.put( "date",date );
+        cv.put("time",time);
+        return cv;
+    }
+
 }
